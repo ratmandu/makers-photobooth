@@ -97,3 +97,68 @@ void SettingsDialog::on_pushButton_2_clicked()
     emit quitApp();
     this->close();
 }
+
+void SettingsDialog::receiveDecodedCode(int type, const QString &data) {
+    if (changingQRCode && !confirmQRCode) {
+        message.close();
+        message.setText("Changing to: \"" + data + "\". Scan again to confirm");
+        message.show();
+        passcode1 = data;
+        confirmQRCode = true;
+    } else if (changingQRCode && confirmQRCode) {
+        if (passcode1 == data) {
+            settings.setValue("QRValue", data);
+            message.close();
+            message.setText("Successfully changed to: " + data);
+            message.show();
+        } else {
+            message.close();
+            message.setText("QR Codes did not match");
+            message.show();
+        }
+        changingQRCode = false;
+        confirmQRCode = false;
+    }
+}
+
+void SettingsDialog::receiveImage(QImage image) {
+    displayImage = &image;
+    ui->ImageLabel->setPixmap(QPixmap().fromImage(displayImage->scaledToWidth(256, Qt::SmoothTransformation)));
+}
+
+void SettingsDialog::on_pushButton_3_clicked()
+{
+    changingQRCode = true;
+    message.setText("Display Code you wish to change to.");
+    message.show();
+}
+
+void SettingsDialog::on_pushButton_4_clicked()
+{
+    QDir src;
+    QDir end;
+
+    src.setPath(src.homePath()+"/PBoothPics");
+
+    end.setPath(QFileDialog::getExistingDirectory(this, "Select Directory", "/media/"));
+    end.mkdir(end.absolutePath()+"/PBoothPics");
+    end.cd(end.absolutePath() + "/PBoothPics");
+    // make directory tree
+    QFileInfoList list = src.entryInfoList(QDir::Dirs|QDir::NoDotAndDotDot);
+    for (int i = 0; i < list.size(); ++i) {
+        QFileInfo info = list.at(i);
+        end.mkdir(info.baseName());
+        // go into folder and copy all files
+        src.cd(info.baseName());
+        end.cd(info.baseName());
+        QFileInfoList files = src.entryInfoList(QDir::Files|QDir::NoDotAndDotDot);
+        for(int j = 1; j < files.size(); ++j) {
+            QFileInfo fileinfo = files.at(j);
+            QFile::copy(fileinfo.absoluteFilePath(), end.absolutePath()+"/"+fileinfo.fileName());
+        }
+        src.cdUp();
+        end.cdUp();
+    }
+    message.setText("Finished Dumping images");
+    message.show();
+}

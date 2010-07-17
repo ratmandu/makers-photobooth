@@ -191,13 +191,13 @@
    <property name="title">
     <string>Settings Dialog Configuration</string>
    </property>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>0</x>
       <y>30</y>
       <width>361</width>
-      <height>361</height>
+      <height>363</height>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout">
@@ -205,6 +205,20 @@
       <widget class="QPushButton" name="pushButton">
        <property name="text">
         <string>Change Passcode</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton_3">
+       <property name="text">
+        <string>Change QRCode Access</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton_4">
+       <property name="text">
+        <string>Dump Images</string>
        </property>
       </widget>
      </item>
@@ -220,6 +234,22 @@
         </size>
        </property>
       </spacer>
+     </item>
+     <item>
+      <widget class="QLabel" name="ImageLabel">
+       <property name="minimumSize">
+        <size>
+         <width>256</width>
+         <height>256</height>
+        </size>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
      </item>
     </layout>
    </widget>
