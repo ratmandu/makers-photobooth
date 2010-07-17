@@ -50,6 +50,7 @@ private:
     Mat frame;
     QImage convertedImage;
     QImage finalImage;
+    QImage finalImageHoriz;
     CvCapture *cam;
     QTimer FrameRateTimer;
     QTimer countdownTimer;
@@ -67,11 +68,15 @@ private:
     QSettings settings;
     SettingsDialog settingsWindow;
     PasscodeDialog passDialog;
+    bool displayingFinalImage;
 
 private slots:
     void CountDownTimerTick();
     void Decoded(int type, const QString & data);
 
+signals:
+    void DecodedForSettingsDialog(int, const QString);
+    void sendImageToSettingsDialog(QImage);
 };
 
 #endif // CVWIDGET_H
