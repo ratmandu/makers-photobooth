@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/UI">
+        <file>IconStripe.jpg</file>
+    </qresource>
+</RCC>
