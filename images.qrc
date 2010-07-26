@@ -2,4 +2,7 @@
     <qresource prefix="/UI">
         <file>IconStripe.jpg</file>
     </qresource>
+    <qresource prefix="/etc">
+        <file>laughing_man.png</file>
+    </qresource>
 </RCC>

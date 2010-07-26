@@ -38,6 +38,10 @@ CVWidget::CVWidget(QWidget *parent) :
 
     imageScanCount = 0;
 
+	replaceFaces = false;
+	pauseScreen = false;
+	showingSettingsDialog = false;
+
     connect(&countdownTimer, SIGNAL(timeout()), this, SLOT(CountDownTimerTick()));
     connect(&zbar, SIGNAL(decoded(int,QString)), this, SLOT(Decoded(int,QString)));
     connect(&settingsWindow, SIGNAL(finished(int)), this, SLOT(SettingsDialogClosed(int)));
@@ -72,17 +76,27 @@ void CVWidget::paintEvent(QPaintEvent *) {
     } else if (!pauseScreen && !displayingFinalImage) { // we are not freezing the image, update it from the camera
         // grab new frame from camera
         frame = cvQueryFrame(cam);
+
         // convert to a format QT can understand
         cvtColor(frame, frame, CV_BGR2RGB);
         // convert to a QImage so we can easily display it and manipulate/save it
-        convertedImage = QImage((const unsigned char*)(frame.data), frame.cols, frame.rows, QImage::Format_RGB888);
-    }
+		if (!replaceFaces) {
+			convertedImage = QImage((const unsigned char*)(frame.data), frame.cols, frame.rows, QImage::Format_RGB888);
+		} else {
+			convertedImage = faceReplace(frame);
+		}
+	}
 
     if (!displayingFinalImage) {
         // draw image to the widget, aligned to the right of the window
         painter.drawImage(this->width() - convertedImage.width(),0, convertedImage);
         // draw icon bar
         painter.drawImage(QPoint(0,0),QImage(":UI/IconStripe.jpg"));
+
+		if (replaceFaces) {
+			// draw indicator
+			painter.fillRect(0, convertedImage.height()-4, 4, 4, QColor::fromRgb(100,100,100));
+		}
     }
     // check for barcode
     if (++imageScanCount >= settings.value("ImageScanInterval", 30).toInt()) {
@@ -114,7 +128,9 @@ void CVWidget::Decoded(int type, const QString &data) {
             pauseScreen = false;
             showingSettingsDialog = true;
             passDialog.showFullScreen();
-        }
+		} else if (type == ZBAR_QRCODE && data == "FACEREPLACE") {
+			replaceFaces ^= true;
+		}
     }
 }
 
@@ -140,9 +156,11 @@ void CVWidget::PasscodeDialogClosed(int result) {
 }
 
 void CVWidget::mouseDoubleClickEvent(QMouseEvent *e) {
-    pauseScreen = true;
-    showingSettingsDialog = true;
-    passDialog.showFullScreen();
+	if (QRect(700, 0, 100, 100).contains(e->pos())) {
+		pauseScreen = true;
+		showingSettingsDialog = true;
+		passDialog.showFullScreen();
+	}
 }
 
 void CVWidget::mousePressEvent(QMouseEvent *e) {
@@ -152,6 +170,32 @@ void CVWidget::mousePressEvent(QMouseEvent *e) {
         showCountdown = true;
         countdownTimer.start();
     }
+}
+
+QImage CVWidget::faceReplace(Mat &src) {
+
+	int i = 0;
+	double scale = 4;
+
+	if (++faceDetectCount >= settings.value("FaceDetectInterval", 50).toInt()-1) {
+		Mat smallImg( cvRound (src.rows/scale), cvRound(src.cols/scale), CV_8UC1 );
+		cvtColor(src, gray, CV_BGR2GRAY);
+		cv::resize(gray, smallImg, smallImg.size());
+		equalizeHist(smallImg, smallImg);
+
+		CascadeClassifier classifier("/usr/share/opencv/haarcascades/haarcascade_frontalface_alt.xml");
+
+		classifier.detectMultiScale(smallImg, faces, 1.1, 3, 0|CV_HAAR_SCALE_IMAGE|CV_HAAR_FEATURE_MAX, Size(30,30));
+	}
+
+	QImage tmpImage = QImage((const unsigned char*)(src.data), src.cols, src.rows, QImage::Format_RGB888);
+
+	QPainter imagePaint(&tmpImage);
+	for( vector<Rect>::const_iterator r = faces.begin(); r != faces.end(); r++) {
+		imagePaint.drawImage(r->x*scale, r->y*scale, QImage(":/etc/laughing_man.png").scaledToWidth((r->width+5)*scale, Qt::SmoothTransformation));
+	}
+
+	return tmpImage;
 }
 
 void CVWidget::CountDownTimerTick() {
@@ -185,6 +229,7 @@ void CVWidget::CountDownTimerTick() {
             } else {
                 QString finalFileName(QDateTime::currentDateTime().toString("MMddyyyy-hhmmssap"));
                 finalImage.save(dir.absolutePath()+"/"+finalFileName+".jpg");
+				replaceFaces = false;
                 if (settings.value("DisplayImageStrip", true).toBool()) {
                     displayingFinalImage = true;
                     SetupTimeCounter = settings.value("SetupTimeSeconds", 3).toInt();

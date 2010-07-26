@@ -21,8 +21,14 @@ FORMS += photobooth.ui \
     passcodedialog.ui
 LIBS += -lcv \
     -lhighgui \
-    -lcxcore -lzbarqt
+	-lcxcore -lzbarqt -lcvaux -lstdc++
 INCLUDEPATH = /usr/include/opencv /usr/include/zbar
 
 RESOURCES += \
     images.qrc
+
+DEFINES += _GLIBCXX_PARALLEL
+
+OTHER_FILES += \
+    laughing_man.png \
+    IconStripe.jpg

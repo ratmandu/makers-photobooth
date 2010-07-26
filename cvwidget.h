@@ -9,6 +9,9 @@
 #include <cv.h>
 #include <cxcore.h>
 #include <highgui.h>
+#include <cvaux.h>
+#include <cxmisc.h>
+#include <stdlib.h>
 #include <QDir>
 #include <QDateTime>
 #include <QDebug>
@@ -45,9 +48,9 @@ protected:
     void mousePressEvent(QMouseEvent *e);
 
 private:
-    QZBar zbar;
+	QZBar zbar;
     Ui::CVWidget *ui;
-    Mat frame;
+	Mat frame, gray;
     QImage convertedImage;
     QImage finalImage;
     QImage finalImageHoriz;
@@ -69,6 +72,10 @@ private:
     SettingsDialog settingsWindow;
     PasscodeDialog passDialog;
     bool displayingFinalImage;
+	bool replaceFaces;
+	vector<Rect> faces;
+	int faceDetectCount;
+	QImage faceReplace(Mat &src);
 
 private slots:
     void CountDownTimerTick();
