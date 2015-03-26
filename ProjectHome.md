@@ -1,0 +1,1 @@
+Photobooth Software for the [Makers Local 256](http://256.makerslocal.org) Photobooth project. Written in Qt/C++ using the OpenCV Library for Camera access.
